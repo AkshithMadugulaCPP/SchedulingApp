@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCnpasw-z7Quo_uSkPEVD2gy5rEEGXha3s',
-    appId: '1:693219929929:android:4cab34b6d80eb27daa7498',
+    appId: '1:693219929929:android:507eb15c0bdf00edaa7498',
     messagingSenderId: '693219929929',
     projectId: 'scheduleup-c707f',
     storageBucket: 'scheduleup-c707f.appspot.com',
@@ -66,4 +66,5 @@ class DefaultFirebaseOptions {
     iosClientId: '693219929929-aqjs1seka49nd90urougbnfp0s1p2ffv.apps.googleusercontent.com',
     iosBundleId: 'com.example.loginScreen',
   );
+
 }

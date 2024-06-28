@@ -7,6 +7,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:693219929929:android:507eb15c0bdf00edaa7498",
+        "android_client_info": {
+          "package_name": "com.akshithmadugula.scheduleit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "693219929929-1o9l4p784i5fk90kee7328ts5cvmeend.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnpasw-z7Quo_uSkPEVD2gy5rEEGXha3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "693219929929-1o9l4p784i5fk90kee7328ts5cvmeend.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "693219929929-2obe7oigfdijdo7qln7roo6p1idmelcr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.scheduleUp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:693219929929:android:40b2bdb1223bab28aa7498",
         "android_client_info": {
           "package_name": "com.cpp.schedule_it"
