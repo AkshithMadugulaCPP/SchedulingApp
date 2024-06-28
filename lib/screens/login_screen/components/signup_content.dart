@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
-import 'package:login_screen/screens/login_screen/animations/change_screen_animation.dart';
-import 'package:login_screen/utils/constants.dart';
-import 'package:login_screen/utils/helper_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../utils/constants.dart';
+import '../../../utils/helper_functions.dart';
+import '../animations/change_screen_animation.dart';
 import 'login_screen_background.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -15,8 +16,13 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMixin {
   late final List<Widget> createAccountContent;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String errorMessage = '';
 
-  Widget inputField(String hint, IconData iconData) {
+  Widget inputField(String hint, IconData iconData, TextEditingController controller, bool obscureText) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 8),
       child: SizedBox(
@@ -27,6 +33,8 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(30),
           child: TextField(
+            controller: controller,
+            obscureText: obscureText,
             textAlignVertical: TextAlignVertical.bottom,
             decoration: InputDecoration(
               border: OutlineInputBorder(
@@ -48,7 +56,18 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 135, vertical: 16),
       child: ElevatedButton(
-        onPressed: () {
+        onPressed: () async {
+          try {
+            await _auth.createUserWithEmailAndPassword(
+              email: _emailController.text,
+              password: _passwordController.text,
+            );
+            Navigator.pushNamed(context, '/login');
+          } catch (e) {
+            setState(() {
+              errorMessage = 'Account already exists.';
+            });
+          }
         },
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -62,7 +81,6 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.green
           ),
         ),
       ),
@@ -72,9 +90,17 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
   @override
   void initState() {
     createAccountContent = [
-      inputField('Name', Ionicons.person_outline),
-      inputField('Email', Ionicons.mail_outline),
-      inputField('Password', Ionicons.lock_closed_outline),
+      inputField('Name', Ionicons.person_outline, _nameController, false),
+      inputField('Email', Ionicons.mail_outline, _emailController, false),
+      inputField('Password', Ionicons.lock_closed_outline, _passwordController, true),
+      if (errorMessage.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 8),
+          child: Text(
+            errorMessage,
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
       signupButton('Sign Up'),
     ];
 
@@ -97,6 +123,9 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
   @override
   void dispose() {
     ChangeScreenAnimation.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -153,13 +182,15 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Positioned(
-            top: 136,
-            left: 24,
-            child: topText(),
+          Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: topText(),
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 100),
+            padding: const EdgeInsets.only(top: 70),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -169,7 +200,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 50),
+              padding: const EdgeInsets.only(bottom: 0),
               child: bottomText(),
             ),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_screen/screens/login_screen/animations/change_screen_animation.dart';
 import 'package:login_screen/screens/login_screen/components/signup_content.dart';
 import 'package:login_screen/utils/constants.dart';
@@ -11,6 +12,7 @@ enum Screens {
   createAccount,
   welcomeBack,
 }
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -20,8 +22,12 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
   late final List<Widget> loginContent;
-  
-  Widget inputField(String hint, IconData iconData) {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String errorMessage = '';
+
+  Widget inputField(String hint, IconData iconData, TextEditingController controller, bool obscureText) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 8),
       child: SizedBox(
@@ -32,6 +38,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(30),
           child: TextField(
+            controller: controller,
+            obscureText: obscureText,
             textAlignVertical: TextAlignVertical.bottom,
             decoration: InputDecoration(
               border: OutlineInputBorder(
@@ -53,7 +61,19 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 135, vertical: 16),
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () async {
+          try {
+            await _auth.signInWithEmailAndPassword(
+              email: _emailController.text,
+              password: _passwordController.text,
+            );
+            Navigator.pushNamed(context, '/homescreen');
+          } catch (e) {
+            setState(() {
+              errorMessage = 'Incorrect email or password.';
+            });
+          }
+        },
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: const StadiumBorder(),
@@ -94,8 +114,16 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   @override
   void initState() {
     loginContent = [
-      inputField('Email', Ionicons.mail_outline),
-      inputField('Password', Ionicons.lock_closed_outline),
+      if (errorMessage.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 8),
+          child: Text(
+            errorMessage,
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
+      inputField('Email', Ionicons.mail_outline, _emailController,false),
+      inputField('Password', Ionicons.lock_closed_outline, _passwordController,true),
       loginButton('Log In'),
       forgotPassword(context),
     ];
@@ -119,6 +147,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   @override
   void dispose() {
     ChangeScreenAnimation.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -135,10 +165,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   Widget bottomText() {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const SignupScreen()),
-        );
         Navigator.pushNamed(context, '/signup');
       },
       behavior: HitTestBehavior.opaque,
@@ -179,13 +205,15 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Positioned(
-            top: 136,
-            left: 24,
-            child: topText(),
+          Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: topText(),
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 100),
+            padding: const EdgeInsets.only(top: 80),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -195,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 50),
+              padding: const EdgeInsets.only(bottom: 0),
               child: bottomText(),
             ),
           ),

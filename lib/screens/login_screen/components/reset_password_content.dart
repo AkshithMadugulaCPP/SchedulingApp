@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
-import 'package:login_screen/utils/constants.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../utils/constants.dart';
+import '../../../utils/helper_functions.dart';
+import '../animations/change_screen_animation.dart';
 import 'login_screen_background.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -11,8 +13,13 @@ class ResetPasswordScreen extends StatefulWidget {
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  Widget inputField(String hint, IconData iconData) {
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> with TickerProviderStateMixin {
+  late final List<Widget> resetPasswordContent;
+  final TextEditingController _emailController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String errorMessage = '';
+
+  Widget inputField(String hint, IconData iconData, TextEditingController controller, bool obscureText) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 8),
       child: SizedBox(
@@ -23,6 +30,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(30),
           child: TextField(
+            controller: controller,
+            obscureText: obscureText,
             textAlignVertical: TextAlignVertical.bottom,
             decoration: InputDecoration(
               border: OutlineInputBorder(
@@ -44,11 +53,32 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 135, vertical: 16),
       child: ElevatedButton(
-        onPressed: () {
-          // Implement your reset password logic here
+        onPressed: () async {
+          try {
+            await _auth.sendPasswordResetEmail(email: _emailController.text);
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text('Password Reset'),
+                content: Text('Link has been sent to your email.'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/login');
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          } catch (e) {
+            setState(() {
+              errorMessage = 'An error occurred. Please try again.';
+            });
+          }
         },
         style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           shape: const StadiumBorder(),
           backgroundColor: kSecondaryColor,
           elevation: 8,
@@ -57,14 +87,44 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         child: Text(
           title,
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.green
           ),
         ),
       ),
     );
   }
+
+  @override
+  void initState() {
+    resetPasswordContent = [
+      inputField('Email', Ionicons.mail_outline, _emailController,false),
+      resetButton('Reset'),
+    ];
+
+    ChangeScreenAnimation.initialize(
+      vsync: this,
+      createAccountItems: resetPasswordContent.length,
+      loginItems: 0,
+    );
+
+    for (var i = 0; i < resetPasswordContent.length && i < ChangeScreenAnimation.createAccountAnimations.length; i++) {
+      resetPasswordContent[i] = HelperFunctions.wrapWithAnimatedBuilder(
+        animation: ChangeScreenAnimation.createAccountAnimations[i],
+        child: resetPasswordContent[i],
+      );
+    }
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    ChangeScreenAnimation.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
   Widget topText() {
     return const Text(
       'Reset\nPassword',
@@ -91,7 +151,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             ),
             children: [
               TextSpan(
-                text: 'Back to Sign In? ',
+                text: 'Remember your password? ',
                 style: TextStyle(
                   color: kPrimaryColor,
                   fontWeight: FontWeight.w600,
@@ -123,15 +183,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             left: 24,
             child: topText(),
           ),
-            Padding(
-                padding: const EdgeInsets.only(top: 100),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [inputField('Email', Ionicons.mail_outline),
-                    resetButton('Reset Password'),],
-                ),
-              ),
+          Padding(
+            padding: const EdgeInsets.only(top: 100),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: resetPasswordContent,
+            ),
+          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -139,8 +198,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               child: bottomText(),
             ),
           ),
-          ],
-        ),
-      );
+        ],
+      ),
+    );
   }
 }
